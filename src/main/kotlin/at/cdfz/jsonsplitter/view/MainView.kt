@@ -1,8 +1,9 @@
 package at.cdfz.jsonsplitter.view
 
-import at.cdfz.jsonsplitter.controller.JsonDocument
-import at.cdfz.jsonsplitter.controller.ProcessingController
-import javafx.scene.Parent
+import at.cdfz.jsonsplitter.controller.*
+import javafx.beans.property.SimpleStringProperty
+import javafx.scene.paint.Color
+import javafx.scene.text.FontWeight
 import javafx.stage.FileChooser
 import tornadofx.*
 
@@ -34,7 +35,28 @@ class MainView : View() {
                     useMaxWidth = true
 
                     readonlyColumn("Path", JsonDocument::path)
-                    readonlyColumn("Name", JsonDocument::path).cellFormat {
+                    readonlyColumn("Data Key", JsonDocument::dataKeyState).cellFormat {
+                        graphic = when (it) {
+                            is DataKeyInit -> label("")
+                            is DataKeyProcessing -> label("processing....")
+                            is DataKeyValue ->
+                                when {
+                                    it.key == null -> label("")
+                                    it.allOptions.size == 1 -> label("\"${it.key}\"")
+                                    else -> combobox(it.keyProperty(), it.allOptions)
+
+                                }
+                            is DataKeyIsArray -> label("global array")
+                            is DataKeyNoneFound -> label("no key found") {
+                                style {
+                                    textFill = Color.RED
+                                }
+                            }
+                            else -> label("Error")
+                        }
+                    }
+
+                    readonlyColumn("Delete", JsonDocument::path).cellFormat {
                         graphic = vbox {
                             button("Delete").action { processingController.removeDocument(it) }
                         }
