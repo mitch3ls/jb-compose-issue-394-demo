@@ -146,6 +146,12 @@ hs_err_pid*
 # JVM caches
 caches-jvm
 
+# build folder
+build
+
+# gradle folder
+.gradle
+
 ### Linux ###
 *~
 
