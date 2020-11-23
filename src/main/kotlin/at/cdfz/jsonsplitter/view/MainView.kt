@@ -33,7 +33,7 @@ class MainView : View() {
                     useMaxWidth = true
 
                     readonlyColumn("Path", JsonDocument::path)
-                    readonlyColumn("Data Key", JsonDocument::dataKeyState).cellFormat {
+                    column("Data Key", JsonDocument::dataKeyStateProperty).cellFormat {
                         graphic = when (it) {
                             is DataKeyInit -> label("")
                             is DataKeyProcessing -> label("processing....")
@@ -41,7 +41,18 @@ class MainView : View() {
                                 when {
                                     it.key == null -> label("")
                                     it.allOptions.size == 1 -> label("\"${it.key}\"")
-                                    else -> combobox(it.keyProperty(), it.allOptions)
+                                    else -> combobox(it.keyProperty(), it.allOptions.keys.toList()) {
+                                        selectionModel.selectedItemProperty().onChange { key ->
+                                            if (key != null) {
+                                                confirm(
+                                                    "Key change",
+                                                    "Do you want to change to key for every document where it is possible?"
+                                                ) {
+                                                    processingController.setKeyEverywhereIfPossible(key)
+                                                }
+                                            }
+                                        }
+                                    }
 
                                 }
                             is DataKeyIsArray -> label("global array")
