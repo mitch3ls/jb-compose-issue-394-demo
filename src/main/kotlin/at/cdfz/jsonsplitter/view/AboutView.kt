@@ -1,10 +1,7 @@
 package at.cdfz.jsonsplitter.view
 
-import at.cdfz.jsonsplitter.Styles
 import javafx.geometry.Pos
-import javafx.scene.control.TextField
-import javafx.scene.layout.VBox
-import javafx.scene.paint.Color
+import javafx.scene.text.FontWeight
 import tornadofx.*
 
 class AboutView : View() {
@@ -20,10 +17,10 @@ class AboutView : View() {
         }
 
         text("JsonSplitter") {
-            style = """
-                -fx-font-size: 20;
-                -fx-font-weight: bold;
-            """.trimIndent()
+            style {
+                fontSize = 22.px
+                fontWeight = FontWeight.BOLD
+            }
         }
 
         vbox {
