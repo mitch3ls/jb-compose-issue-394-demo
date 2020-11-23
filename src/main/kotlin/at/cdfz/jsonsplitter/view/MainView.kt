@@ -1,9 +1,7 @@
 package at.cdfz.jsonsplitter.view
 
 import at.cdfz.jsonsplitter.controller.*
-import javafx.beans.property.SimpleStringProperty
 import javafx.scene.paint.Color
-import javafx.scene.text.FontWeight
 import javafx.stage.FileChooser
 import tornadofx.*
 
@@ -69,9 +67,10 @@ class MainView : View() {
 
                     button("Add source file").action {
                         val files = chooseFile(
-                                "Select input files",
-                                filters = arrayOf(FileChooser.ExtensionFilter("JSON document", "*.json")),
-                                mode = FileChooserMode.Multi)
+                            "Select input files",
+                            filters = arrayOf(FileChooser.ExtensionFilter("JSON document", "*.json")),
+                            mode = FileChooserMode.Multi
+                        )
 
                         for (file in files) {
                             val document = JsonDocument(file)
@@ -83,9 +82,9 @@ class MainView : View() {
                         val directory = chooseDirectory("Add an input folder") ?: return@action
 
                         val files = directory
-                                .walkTopDown()
-                                .filter { it.extension == "json" }
-                                .toList()
+                            .walkTopDown()
+                            .filter { it.extension == "json" }
+                            .toList()
 
                         for (file in files) {
                             val document = JsonDocument(file)
