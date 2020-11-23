@@ -1,8 +1,4 @@
-[
-  {
-    "key": "value"
-  },
-  {
-    "key": "value"
-  }
-]
+{
+  "property1": "foo",
+  "property2": "bar"
+}

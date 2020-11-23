@@ -6,5 +6,13 @@
     {
       "key": "value"
     }
+  ],
+  "property2": [
+    {
+      "key": "value"
+    },
+    {
+      "key": "value"
+    }
   ]
 }
