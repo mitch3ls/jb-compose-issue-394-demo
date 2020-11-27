@@ -68,43 +68,9 @@ class MainView : View() {
                         }
                     }
 
-
-                    // TODO: what to do if hash exists, if we don't want any hash, can we override existing hash?
-                    /*column("Hash", JsonDocument::dataKeyStateProperty).cellFormat {
-                        graphic = when (it) {
-                            is DataKeyInit -> label("")
-                            is DataKeyProcessing -> label("processing....")
-                            is DataKeyValue ->
-                                when {
-                                    it.key == null -> label("")
-                                    it.allOptions.size == 1 -> label("\"${it.key}\"")
-                                    else -> combobox(it.keyProperty(), it.allOptions.keys.toList()) {
-                                        selectionModel.selectedItemProperty().onChange { key ->
-                                            if (key != null) {
-                                                confirm(
-                                                    "Key change",
-                                                    "Do you want to change to key for every document where it is possible?"
-                                                ) {
-                                                    processingController.setKeyEverywhereIfPossible(key)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                }
-                            is DataKeyIsArray -> label("global array")
-                            is DataKeyNoneFound -> label("no key found") {
-                                style {
-                                    textFill = Color.RED
-                                }
-                            }
-                            else -> label("Error")
-                        }
-                    }
-
-                    readonlyColumn("Delete", JsonDocument::path).cellFormat {
+                    readonlyColumn("Delete", JsonDocument::class).cellFormat {
                         graphic = vbox {
-                            button("Delete").action { processingController.removeDocument(it) }
+                            button("Delete").action { processingController.removeDocument(it.path) }
                         }
                     }
 
