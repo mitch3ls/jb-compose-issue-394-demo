@@ -41,29 +41,29 @@ class ProcessingController : Controller() {
 
     fun findPossibleDataKeys(path: String, callback: (DataKeyState) -> Unit) {
 
-        val possibleKeys = HashMap<String, List<String>>()
+        try {
+            val fileStream = FileInputStream(path)
+            val streamReader = InputStreamReader(fileStream)
 
-        val fileStream = FileInputStream(path)
-        val streamReader = InputStreamReader(fileStream)
+            val totalFileSize = fileStream.channel.size().toDouble()
 
-        val totalFileSize = fileStream.channel.size().toDouble()
+            JsonReader(streamReader).use { reader ->
+                val possibleKeys = HashMap<String, List<String>>()
 
-        JsonReader(streamReader).use { reader ->
-            try {
                 // check if JSON has global object
                 reader.beginObject {
                     while (reader.hasNext()) {
                         // read property name
                         val readName = reader.nextName()
                         try {
-                            var keys: List<String> = emptyList()
+                            var recordFields: List<String> = emptyList()
                             // check if value is array
                             reader.beginArray {
 
                                 try {
                                     // check if first element is object
                                     val record = reader.nextObject()
-                                    keys = record.keys.map { it.toString() }
+                                    recordFields = record.keys.map { it }
                                 } catch (ex: KlaxonException) {
                                     // no object, it seems
                                     println("no object")
@@ -95,8 +95,11 @@ class ProcessingController : Controller() {
                                 callback(DataKeyProcessing(1.0))
                             }
 
-                            // didn't throw exception, so it must be a valid key
-                            possibleKeys.put(readName, keys)
+                            // only add field if records have fields
+                            if (recordFields.isNotEmpty()) {
+                                // didn't throw exception, so it must be a valid key
+                                possibleKeys.put(readName, recordFields)
+                            }
                         } catch (ex: KlaxonException) {
                             // property is no array, skip
                             println("internal $ex")
@@ -111,10 +114,36 @@ class ProcessingController : Controller() {
                 } else {
                     callback(DataKeyNoneFound())
                 }
+            }
+        } catch (ex: KlaxonException) {
+
+            try {
+
+                val fileStream = FileInputStream(path)
+                val streamReader = InputStreamReader(fileStream)
+
+                // so it's not a global object, try array
+                JsonReader(streamReader).use { reader ->
+                    reader.beginArray {
+                        val fields: List<String>
+
+                        try {
+                            // check if first element is object
+                            val record = reader.nextObject()
+                            fields = record.keys.map { it }
+                        } catch (ex: KlaxonException) {
+                            // no object, it seems
+                            println("no object")
+                            callback(DataKeyInvalidDocument())
+                            return@beginArray
+                        }
+
+                        callback(DataKeyIsArray(fields))
+                        return@beginArray
+                    }
+                }
             } catch (ex: KlaxonException) {
-                // so it's not a global object -> must be an array
                 println(ex)
-                callback(DataKeyIsArray())
             }
         }
     }
