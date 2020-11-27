@@ -2,11 +2,8 @@ package at.cdfz.jsonsplitter.controller
 
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.KlaxonException
-import com.beust.klaxon.token.Token
 import tornadofx.*
-import java.io.File
 import java.io.FileInputStream
-import java.io.FileReader
 import java.io.InputStreamReader
 import kotlin.concurrent.thread
 
@@ -16,7 +13,7 @@ class ProcessingController : Controller() {
     fun addDocument(document: JsonDocument) {
         documents.add(document)
 
-        document.dataKeyState = DataKeyProcessing()
+        document.dataKeyState = DataKeyProcessing(0.0)
         thread() {
             findPossibleDataKeys(document.path) { dataKeyState ->
                 document.dataKeyState = dataKeyState
@@ -49,7 +46,7 @@ class ProcessingController : Controller() {
         val fileStream = FileInputStream(path)
         val streamReader = InputStreamReader(fileStream)
 
-        println(path)
+        val totalFileSize = fileStream.channel.size().toDouble()
 
         JsonReader(streamReader).use { reader ->
             try {
@@ -74,8 +71,17 @@ class ProcessingController : Controller() {
 
                                 // HACK: skip rest of array
                                 var arrayLevelCounter = 0
+                                var progressNotificationCounter = 0
                                 while (true) {
                                     val nextToken = reader.lexer.peek().toString()
+
+                                    // only update progress every 100 tokens
+                                    if (++progressNotificationCounter == 100) {
+                                        val progress = fileStream.channel.position() / totalFileSize
+                                        callback(DataKeyProcessing(progress))
+
+                                        progressNotificationCounter = 0
+                                    }
 
                                     when {
                                         nextToken == "[" -> arrayLevelCounter++
@@ -86,6 +92,7 @@ class ProcessingController : Controller() {
                                     }
                                     reader.lexer.next()
                                 }
+                                callback(DataKeyProcessing(1.0))
                             }
 
                             // didn't throw exception, so it must be a valid key

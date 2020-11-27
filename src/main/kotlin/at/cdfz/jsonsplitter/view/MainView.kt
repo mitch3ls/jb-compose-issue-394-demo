@@ -36,6 +36,43 @@ class MainView : View() {
                     column("Data Key", JsonDocument::dataKeyStateProperty).cellFormat {
                         graphic = when (it) {
                             is DataKeyInit -> label("")
+                            is DataKeyProcessing -> label("processing...")
+                            is DataKeyValue ->
+                                when {
+                                    it.key == null -> label("")
+                                    it.allOptions.size == 1 -> label("\"${it.key}\"")
+                                    else -> combobox(
+                                        it.keyProperty(),
+                                        it.allOptions.keys.toList()
+                                    ) {
+                                        selectionModel.selectedItemProperty().onChange { key ->
+                                            if (key != null) {
+                                                confirm(
+                                                    "Do you want to change to data key for every similar document?",
+                                                    "The data under the key \"$key\" will be used for every document that has that key."
+                                                ) {
+                                                    processingController.setKeyEverywhereIfPossible(key)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
+                            is DataKeyIsArray -> label("global array")
+                            is DataKeyNoneFound -> label("no key found") {
+                                style {
+                                    textFill = Color.RED
+                                }
+                            }
+                            else -> label("Error")
+                        }
+                    }
+
+
+                    // TODO: what to do if hash exists, if we don't want any hash, can we override existing hash?
+                    /*column("Hash", JsonDocument::dataKeyStateProperty).cellFormat {
+                        graphic = when (it) {
+                            is DataKeyInit -> label("")
                             is DataKeyProcessing -> label("processing....")
                             is DataKeyValue ->
                                 when {
