@@ -9,6 +9,8 @@ class MainView : View() {
 
     val processingController: ProcessingController by inject()
 
+    var dataKeyEdited = false
+
     override val root = vbox {
 
         setPrefSize(600.0, 400.0)
@@ -46,12 +48,16 @@ class MainView : View() {
                                         it.allOptions.keys.toList()
                                     ) {
                                         selectionModel.selectedItemProperty().onChange { key ->
-                                            if (key != null) {
+                                            if (key != null && dataKeyEdited == false) {
+                                                dataKeyEdited = true
                                                 confirm(
                                                     "Do you want to change to data key for every similar document?",
                                                     "The data under the key \"$key\" will be used for every document that has that key."
                                                 ) {
                                                     processingController.setKeyEverywhereIfPossible(key)
+                                                }
+                                                runLater {
+                                                    dataKeyEdited = false
                                                 }
                                             }
                                         }
