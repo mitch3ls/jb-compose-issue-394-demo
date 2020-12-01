@@ -1,0 +1,32 @@
+{
+  "property1": [
+    {
+      "key": "value",
+      "key1": "value"
+    },
+    {
+      "key": "value",
+      "key1": "value"
+    }
+  ],
+  "property2": [
+    {
+      "key3": "value",
+      "key4": "value"
+    },
+    {
+      "key3": "value",
+      "key4": "value"
+    }
+  ],
+  "property3": [
+    {
+      "key3": "value",
+      "key4": "value"
+    },
+    {
+      "key3": "value",
+      "key4": "value"
+    }
+  ]
+}
