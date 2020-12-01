@@ -14,9 +14,14 @@ class ProcessingController : Controller() {
         documents.add(document)
 
         document.dataKeyState = DataKeyProcessing(0.0)
+        document.idGenerationState = IdGenerationProcessing()
         thread() {
             findPossibleDataKeys(document.path) { dataKeyState ->
                 document.dataKeyState = dataKeyState
+
+                when (dataKeyState) {
+                    is DataKeyValue -> document.idGenerationState = IdGenerationDisabled(document)
+                }
             }
         }
 
@@ -30,7 +35,6 @@ class ProcessingController : Controller() {
         for (document in documents) {
             when (document.dataKeyState) {
                 is DataKeyValue -> {
-                    println("Change for ${document.path}")
                     if (key in (document.dataKeyState as DataKeyValue).allOptions.keys) {
                         document.dataKeyState = DataKeyValue(key, (document.dataKeyState as DataKeyValue).allOptions)
                     }

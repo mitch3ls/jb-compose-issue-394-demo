@@ -1,9 +1,12 @@
 package at.cdfz.jsonsplitter.view
 
 import at.cdfz.jsonsplitter.controller.*
+import javafx.collections.FXCollections
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
+import javafx.util.Duration
 import tornadofx.*
+import tornadofx.controlsfx.checkcombobox
 
 class MainView : View() {
 
@@ -32,9 +35,11 @@ class MainView : View() {
                 label("Source documents")
 
                 tableview(processingController.documents) {
+                    val tableView = this
                     useMaxWidth = true
 
                     readonlyColumn("Path", JsonDocument::path)
+
                     column("Data Key", JsonDocument::dataKeyStateProperty).cellFormat {
                         graphic = when (it) {
                             is DataKeyInit -> label("")
@@ -74,13 +79,70 @@ class MainView : View() {
                         }
                     }
 
-                    readonlyColumn("Delete", JsonDocument::class).cellFormat {
-                        graphic = vbox {
-                            button("Delete").action { processingController.removeDocument(it.path) }
+                    column("Id Generation", JsonDocument::idGenerationStateProperty).cellFormat {
+                        graphic = when (it) {
+                            is IdGenerationInit -> label("")
+                            is IdGenerationProcessing -> label("")
+                            is IdGenerationDisabled -> checkbox("Generate ID") {
+                                this.selectedProperty().onChange { isTicked ->
+                                    if (isTicked) {
+                                        it.document.idGenerationState =
+                                            IdGenerationEnabled(
+                                                "".toProperty(),
+                                                it.document.getAvailableFields(),
+                                                FXCollections.observableArrayList<String>(),
+                                                it.document
+                                            )
+
+                                        runLater(Duration.millis(200.0)) {
+                                            // force eventual adjustment to new cell height
+                                            tableView.requestResize()
+                                        }
+                                    }
+                                }
+                            }
+                            is IdGenerationEnabled -> vbox(spacing = 5) {
+                                checkbox("Generate ID") {
+                                    // textbox is ticked -> ID generation is enabled here
+                                    selectedProperty().set(true)
+
+                                    this.selectedProperty().onChange { isTicked ->
+                                        if (isTicked == false) {
+                                            it.document.idGenerationState = IdGenerationDisabled(it.document)
+
+                                            runLater(Duration.millis(200.0)) {
+                                                // force eventual adjustment to new cell height
+                                                tableView.requestResize()
+                                            }
+                                        }
+                                    }
+                                }
+
+                                vbox {
+                                    label("name of id field:")
+                                    textfield {
+                                        textProperty().bindBidirectional(it.idField)
+                                    }
+                                }
+
+
+                                vbox {
+                                    label("fields to hash")
+                                    checkcombobox(it.availableFields.asObservable(), it.hashFields)
+                                }
+
+                            }
+                            else -> label("Error")
                         }
                     }
 
-                    smartResize()
+                    readonlyColumn("Delete", JsonDocument::path).cellFormat { path ->
+                        graphic = vbox {
+                            button("Delete").action { processingController.removeDocument(path) }
+                        }
+                    }
+
+                    columnResizePolicy = SmartResize.POLICY
                 }
 
                 hbox {
