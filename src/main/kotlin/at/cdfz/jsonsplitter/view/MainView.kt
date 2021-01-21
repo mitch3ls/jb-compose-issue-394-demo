@@ -196,13 +196,20 @@ class MainView : View() {
                     button("choose").action {
                         val directory = chooseDirectory("Choose an output folder") ?: return@action
 
-                        println(directory.canonicalPath)
-
                         processingController.destinationPath.set(directory.canonicalPath)
                     }
                 }
             }
 
+            button("Split files") {
+                disableWhen(
+                    processingController.destinationPath.isEmpty
+                    .or(booleanBinding(processingController.documents) { isEmpty() }))
+
+                action {
+                    println("split")
+                }
+            }
         }
     }
 }

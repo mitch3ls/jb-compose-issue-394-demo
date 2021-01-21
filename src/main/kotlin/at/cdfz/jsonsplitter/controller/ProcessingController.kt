@@ -2,6 +2,7 @@ package at.cdfz.jsonsplitter.controller
 
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.KlaxonException
+import javafx.beans.property.SimpleStringProperty
 import tornadofx.*
 import java.io.FileInputStream
 import java.io.InputStreamReader
@@ -9,7 +10,7 @@ import kotlin.concurrent.thread
 
 class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
-    val destinationPath = "".toProperty()
+    val destinationPath = SimpleStringProperty()
 
     fun addDocument(document: JsonDocument) {
         documents.add(document)
