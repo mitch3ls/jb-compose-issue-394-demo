@@ -9,6 +9,7 @@ import kotlin.concurrent.thread
 
 class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
+    val destinationPath = "".toProperty()
 
     fun addDocument(document: JsonDocument) {
         documents.add(document)

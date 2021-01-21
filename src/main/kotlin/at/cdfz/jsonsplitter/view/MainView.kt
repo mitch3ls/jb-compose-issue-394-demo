@@ -2,6 +2,8 @@ package at.cdfz.jsonsplitter.view
 
 import at.cdfz.jsonsplitter.controller.*
 import javafx.collections.FXCollections
+import javafx.scene.layout.Background
+import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
 import javafx.util.Duration
@@ -179,6 +181,26 @@ class MainView : View() {
             vbox {
 
                 label("output directory")
+
+                hbox {
+
+                    spacing = 10.0
+
+                    textfield {
+
+                        hgrow = Priority.ALWAYS
+
+                        textProperty().bindBidirectional(processingController.destinationPath)
+                    }
+
+                    button("choose").action {
+                        val directory = chooseDirectory("Choose an output folder") ?: return@action
+
+                        println(directory.canonicalPath)
+
+                        processingController.destinationPath.set(directory.canonicalPath)
+                    }
+                }
             }
 
         }
