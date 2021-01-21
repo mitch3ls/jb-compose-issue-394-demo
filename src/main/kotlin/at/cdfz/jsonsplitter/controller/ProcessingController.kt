@@ -22,6 +22,7 @@ class ProcessingController : Controller() {
 
                 when (dataKeyState) {
                     is DataKeyValue -> document.idGenerationState = IdGenerationDisabled(document)
+                    is DataKeyIsArray -> document.idGenerationState = IdGenerationDisabled(document)
                 }
             }
         }
