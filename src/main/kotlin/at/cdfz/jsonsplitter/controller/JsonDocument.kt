@@ -1,5 +1,6 @@
 package at.cdfz.jsonsplitter.controller
 
+import javafx.beans.property.DoubleProperty
 import javafx.beans.property.Property
 import javafx.collections.ObservableList
 import tornadofx.*
@@ -27,8 +28,17 @@ class IdGenerationEnabled(
     val document: JsonDocument /* HACK */
 ) : IdGenerationState()
 
+abstract class ProcessingState
+class ProcessingInit : ProcessingState()
+class ProcessingError : ProcessingState()
+class ProcessingProgress(var progress: DoubleProperty) : ProcessingState()
+class ProcessingDone : ProcessingState()
+
 class JsonDocument(private val file: File) {
     val path: String get() = file.canonicalPath
+
+    var processingState by property<ProcessingState>(ProcessingInit())
+    fun processingStateProperty() = getProperty(JsonDocument::processingState)
 
     var dataKeyState by property<DataKeyState>(DataKeyInit())
     fun dataKeyStateProperty() = getProperty(JsonDocument::dataKeyState)
