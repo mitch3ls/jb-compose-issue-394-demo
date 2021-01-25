@@ -2,7 +2,6 @@ package at.cdfz.jsonsplitter.view
 
 import at.cdfz.jsonsplitter.controller.*
 import javafx.collections.FXCollections
-import javafx.scene.layout.Background
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
@@ -18,7 +17,7 @@ class MainView : View() {
 
     override val root = vbox {
 
-        setPrefSize(600.0, 400.0)
+        setPrefSize(800.0, 600.0)
 
         menubar {
             menu("Help") {
