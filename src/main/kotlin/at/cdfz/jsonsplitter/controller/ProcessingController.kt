@@ -34,6 +34,7 @@ class ProcessingController : Controller() {
             }
         }
 
+        executor.execute(worker)
     }
 
     fun removeDocument(path: String) {
