@@ -1,23 +1,29 @@
 package at.cdfz.jsonsplitter.controller
 
-import com.beust.klaxon.JsonReader
-import com.beust.klaxon.KlaxonException
+import at.cdfz.jsonsplitter.controller.Processing.findPossibleDataKeys
+import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
-import tornadofx.*
-import java.io.FileInputStream
-import java.io.InputStreamReader
-import kotlin.concurrent.thread
+import tornadofx.Controller
+import tornadofx.asObservable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
     val destinationPath = SimpleStringProperty()
+    val recordsPerShard = SimpleIntegerProperty(100)
+
+    val executor: ExecutorService = run {
+        val cores = Runtime.getRuntime().availableProcessors()
+        Executors.newFixedThreadPool(cores)
+    }
 
     fun addDocument(document: JsonDocument) {
         documents.add(document)
 
         document.dataKeyState = DataKeyProcessing(0.0)
         document.idGenerationState = IdGenerationProcessing()
-        thread() {
+        val worker = Runnable() {
             findPossibleDataKeys(document.path) { dataKeyState ->
                 document.dataKeyState = dataKeyState
 
