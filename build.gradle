@@ -19,7 +19,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
     implementation "no.tornado:tornadofx:$tornadofx_version"
-    implementation 'com.beust:klaxon:5.0.1'
+    implementation "com.squareup.moshi:moshi:1.11.0"
+    implementation("com.squareup.moshi:moshi-kotlin:1.11.0")
     compile 'no.tornado:tornadofx-controlsfx:0.1.1'
     testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
 }
