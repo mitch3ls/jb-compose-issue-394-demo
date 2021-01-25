@@ -206,7 +206,7 @@ class MainView : View() {
                     .or(booleanBinding(processingController.documents) { isEmpty() }))
 
                 action {
-                    println("split")
+                    find<ProcessingView>().openModal()
                 }
             }
         }
