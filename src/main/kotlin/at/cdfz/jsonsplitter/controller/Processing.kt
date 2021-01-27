@@ -1,14 +1,14 @@
 package at.cdfz.jsonsplitter.controller
 
+import at.cdfz.jsonsplitter.util.toHex
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okio.Okio
 import tornadofx.toProperty
 import java.io.File
-import javax.smartcardio.Card
+import java.security.MessageDigest
 
 
 class DocumentNotReadyException : Exception() {
@@ -21,6 +21,7 @@ object Processing {
 
     fun parseRecords(document: JsonDocument) = sequence {
         val dataKeyState = document.dataKeyState
+        val idGenerationState = document.idGenerationState
 
         if (dataKeyState !is DataKeyValue && dataKeyState !is DataKeyIsArray) {
             // document not ready
@@ -42,13 +43,21 @@ object Processing {
             reader.beginArray()
 
             while (reader.hasNext()) {
-                val value = reader.readJsonValue()
+                val readValue = reader.readJsonValue()
 
-                if (value !is Map<*, *>) {
+                if (readValue !is Map<*, *>) {
                     throw UnexpectedValueException()
                 }
 
-                yield(value)
+                val record = readValue.toMutableMap()
+
+                if (idGenerationState is IdGenerationEnabled) {
+                    val id = generateId(document, record)
+
+                    record[idGenerationState.idField.value] = id
+                }
+
+                yield(record)
             }
 
             reader.endArray()
@@ -78,7 +87,6 @@ object Processing {
             val adapter = moshi.adapter(List::class.java)
 
             val sequence = parseRecords(document)
-            //.onEach { callback(ProcessingProgress(it.second)) }
 
             val chunks = sequence.chunked(chunkSize)
 
@@ -182,5 +190,28 @@ object Processing {
         bufferedSource.inputStream().available()
 
         return JsonReader.of(bufferedSource)
+    }
+
+    fun generateId(document: JsonDocument, record: Map<*, *>): String {
+        val idGenerationState = document.idGenerationState
+
+        if (idGenerationState !is IdGenerationEnabled) {
+            throw DocumentNotReadyException()
+        }
+
+        // sort fields for repeatability
+        val fields = idGenerationState.hashFields.sorted()
+
+        val byteMessages = fields
+            .map { record[it].toString().toByteArray() }
+
+        val md = MessageDigest.getInstance("SHA-1")
+
+        for (message in byteMessages) {
+            md.update(message)
+        }
+
+        val digest = md.digest()
+        return digest.toHex()
     }
 }
