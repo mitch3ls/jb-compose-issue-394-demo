@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
     val destinationPath = SimpleStringProperty()
-    val recordsPerShard = SimpleIntegerProperty(100)
+    val recordsPerFile = SimpleIntegerProperty(100)
 
     val executor: ExecutorService = run {
         val cores = Runtime.getRuntime().availableProcessors()
@@ -61,7 +61,7 @@ class ProcessingController : Controller() {
                     Processing.splitDocument(
                         it,
                         this.destinationPath.get(),
-                        this.recordsPerShard.get(),
+                        this.recordsPerFile.get(),
                     ) { processingState ->
                         // HACK needed for progressbar in UI to work (I know - eewwww)
                         if (it.processingState is ProcessingProgress && processingState is ProcessingProgress) {

@@ -178,6 +178,16 @@ class MainView : View() {
             }
 
             vbox {
+                hbox {
+                    vbox {
+                        label("records per file")
+
+                        textfield(processingController.recordsPerFile)
+                    }
+                }
+            }
+
+            vbox {
 
                 label("output directory")
 
