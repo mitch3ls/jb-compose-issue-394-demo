@@ -70,6 +70,7 @@ object Processing {
         document: JsonDocument,
         destinationPath: String,
         chunkSize: Int,
+        prettyPrint: Boolean,
         callback: (ProcessingState) -> Unit
     ) {
         callback(ProcessingInit())
@@ -84,7 +85,11 @@ object Processing {
             val moshi = Moshi.Builder()
                 .addLast(KotlinJsonAdapterFactory())
                 .build()
-            val adapter = moshi.adapter(List::class.java)
+            var adapter = moshi.adapter(List::class.java)
+
+            if (prettyPrint) {
+                adapter = adapter.indent("  ")
+            }
 
             val sequence = parseRecords(document)
 

@@ -1,6 +1,7 @@
 package at.cdfz.jsonsplitter.controller
 
 import at.cdfz.jsonsplitter.controller.Processing.findPossibleDataKeys
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import tornadofx.Controller
@@ -12,6 +13,7 @@ class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
     val destinationPath = SimpleStringProperty()
     val recordsPerFile = SimpleIntegerProperty(100)
+    val prettyPrintEnabled = SimpleBooleanProperty(false)
 
     val executor: ExecutorService = run {
         val cores = Runtime.getRuntime().availableProcessors()
@@ -62,6 +64,7 @@ class ProcessingController : Controller() {
                         it,
                         this.destinationPath.get(),
                         this.recordsPerFile.get(),
+                        this.prettyPrintEnabled.get()
                     ) { processingState ->
                         // HACK needed for progressbar in UI to work (I know - eewwww)
                         if (it.processingState is ProcessingProgress && processingState is ProcessingProgress) {

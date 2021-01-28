@@ -2,6 +2,7 @@ package at.cdfz.jsonsplitter.view
 
 import at.cdfz.jsonsplitter.controller.*
 import javafx.collections.FXCollections
+import javafx.geometry.Pos
 import javafx.scene.layout.Priority
 import javafx.scene.paint.Color
 import javafx.stage.FileChooser
@@ -179,10 +180,18 @@ class MainView : View() {
 
             vbox {
                 hbox {
+                    spacing = 10.0
+
                     vbox {
                         label("records per file")
 
                         textfield(processingController.recordsPerFile)
+                    }
+
+                    vbox {
+                        label("formatting")
+
+                        checkbox("pretty print", processingController.prettyPrintEnabled)
                     }
                 }
             }
