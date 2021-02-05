@@ -23,7 +23,7 @@ val executor: ExecutorService = run {
     Executors.newFixedThreadPool(cores)
 }
 
-fun main() = Window(title = "Compose for Desktop", size = IntSize(800, 600)) {
+fun main() = Window(title = "JsonSplitter", size = IntSize(800, 600)) {
     val showProcessingScreen = remember { mutableStateOf(false) }
 
     val documents = remember { mutableStateListOf<JsonDocument>() }
