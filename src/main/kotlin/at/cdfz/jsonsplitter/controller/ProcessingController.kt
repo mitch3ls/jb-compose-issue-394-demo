@@ -1,15 +1,10 @@
 package at.cdfz.jsonsplitter.controller
 
-import at.cdfz.jsonsplitter.controller.Processing.findPossibleDataKeys
-import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleIntegerProperty
-import javafx.beans.property.SimpleStringProperty
-import tornadofx.Controller
-import tornadofx.asObservable
+//import at.cdfz.jsonsplitter.util.Processing.findPossibleDataKeys
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class ProcessingController : Controller() {
+/*class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()
     val destinationPath = SimpleStringProperty()
     val recordsPerFile = SimpleIntegerProperty(100)
@@ -78,4 +73,4 @@ class ProcessingController : Controller() {
 
         workers.forEach { executor.execute(it) }
     }
-}
+}*/

@@ -1,12 +1,11 @@
-package at.cdfz.jsonsplitter.controller
+package at.cdfz.jsonsplitter.util
 
-import at.cdfz.jsonsplitter.util.toHex
+import at.cdfz.jsonsplitter.controller.*
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okio.Okio
-import tornadofx.toProperty
 import java.io.File
 import java.security.MessageDigest
 
@@ -30,7 +29,7 @@ object Processing {
 
         try {
 
-            val reader = jsonReaderFromPath(document.path)
+            val reader = jsonReaderFromFile(document.file)
 
             if (dataKeyState is DataKeyValue) {
                 reader.beginObject()
@@ -54,7 +53,7 @@ object Processing {
                 if (idGenerationState is IdGenerationEnabled) {
                     val id = generateId(document, record)
 
-                    record[idGenerationState.idField.value] = id
+                    record[idGenerationState.idField] = id
                 }
 
                 yield(record)
@@ -75,7 +74,7 @@ object Processing {
     ) {
         callback(ProcessingInit())
 
-        val sourceFile = File(document.path)
+        val sourceFile = document.file
         val baseName = sourceFile.nameWithoutExtension
         val totalLength = sourceFile.length()
 
@@ -105,8 +104,8 @@ object Processing {
                 destinationFile.writeText(json)
 
                 bytesWritten += json.length
-                val progress = bytesWritten / totalLength
-                callback(ProcessingProgress(progress.toProperty()))
+                val progress = (bytesWritten / totalLength).toFloat()
+                callback(ProcessingProgress(progress))
             }
 
             callback(ProcessingDone())
@@ -115,10 +114,10 @@ object Processing {
         }
     }
 
-    fun findPossibleDataKeys(path: String, callback: (DataKeyState) -> Unit) {
+    fun findPossibleDataKeys(file: File, callback: (DataKeyState) -> Unit) {
         try {
 
-            val reader = jsonReaderFromPath(path)
+            val reader = jsonReaderFromFile(file)
 
             val firstToken = reader.peek()
 
@@ -187,8 +186,7 @@ object Processing {
         return possibleRecordFields
     }
 
-    fun jsonReaderFromPath(path: String): JsonReader {
-        val file = File(path)
+    fun jsonReaderFromFile(file: File): JsonReader {
         val source = Okio.source(file)
         val bufferedSource = Okio.buffer(source)
 

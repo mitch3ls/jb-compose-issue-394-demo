@@ -1,75 +1,53 @@
 package at.cdfz.jsonsplitter.controller
 
-import javafx.beans.property.DoubleProperty
-import javafx.beans.property.Property
-import javafx.collections.ObservableList
-import tornadofx.*
 import java.io.File
+
+data class JsonDocument(
+    val file: File,
+    val dataKeyState: DataKeyState,
+    val idGenerationState: IdGenerationState,
+    val processingState: ProcessingState
+) {
+    override fun equals(other: Any?) = (other is JsonDocument)
+            && file == other.file
+
+    override fun hashCode(): Int {
+        return file.hashCode()
+    }
+}
+
+interface WithAvailableKeys {
+    fun getAvailableFields(): List<String>
+}
 
 abstract class DataKeyState
 class DataKeyInit : DataKeyState()
-class DataKeyProcessing(val progress: Double) : DataKeyState()
+data class DataKeyProcessing(val progress: Float) : DataKeyState()
 class DataKeyNoneFound : DataKeyState()
 class DataKeyInvalidDocument : DataKeyState()
-class DataKeyIsArray(val fields: List<String>) : DataKeyState()
-class DataKeyValue(key: String, val allOptions: Map<String, List<String>>) : DataKeyState() {
-    var key: String by property(key)
-    fun keyProperty() = getProperty(DataKeyValue::key)
+data class DataKeyIsArray(val fields: List<String>) : DataKeyState(), WithAvailableKeys {
+    override fun getAvailableFields(): List<String> {
+        return fields
+    }
+}
+data class DataKeyValue(val key: String, val allOptions: Map<String, List<String>>) : DataKeyState(),
+    WithAvailableKeys {
+    override fun getAvailableFields(): List<String> {
+        return allOptions[key] ?: emptyList()
+    }
 }
 
 abstract class IdGenerationState
 class IdGenerationInit : IdGenerationState()
 class IdGenerationProcessing : IdGenerationState()
-class IdGenerationDisabled(val document: JsonDocument /* HACK */) : IdGenerationState()
-class IdGenerationEnabled(
-    val idField: Property<String>,
-    val availableFields: List<String>,
-    val hashFields: ObservableList<String>,
-    val document: JsonDocument /* HACK */
+class IdGenerationDisabled : IdGenerationState()
+data class IdGenerationEnabled(
+    val idField: String,
+    val hashFields: List<String>
 ) : IdGenerationState()
 
 abstract class ProcessingState
 class ProcessingInit : ProcessingState()
 class ProcessingError : ProcessingState()
-class ProcessingProgress(var progress: DoubleProperty) : ProcessingState()
+class ProcessingProgress(val progress: Float) : ProcessingState()
 class ProcessingDone : ProcessingState()
-
-class JsonDocument(private val file: File) {
-    val path: String get() = file.canonicalPath
-
-    var processingState by property<ProcessingState>(ProcessingInit())
-    fun processingStateProperty() = getProperty(JsonDocument::processingState)
-
-    var dataKeyState by property<DataKeyState>(DataKeyInit())
-    fun dataKeyStateProperty() = getProperty(JsonDocument::dataKeyState)
-
-    var idGenerationState by property<IdGenerationState>(IdGenerationInit())
-    fun idGenerationStateProperty() = getProperty(JsonDocument::idGenerationState)
-
-    init {
-        dataKeyStateProperty().onChange {
-            val idGenerationState = this.idGenerationState
-
-            if (idGenerationState is IdGenerationEnabled) {
-                val newAvailableFields = getAvailableFields()
-
-                this.idGenerationState = IdGenerationEnabled(
-                    idGenerationState.idField,
-                    newAvailableFields,
-                    idGenerationState.hashFields,
-                    this
-                )
-            }
-        }
-    }
-
-    fun getAvailableFields(): List<String> {
-        val dataKeyState = this.dataKeyState
-        val availableFields = when (dataKeyState) {
-            is DataKeyValue -> dataKeyState.allOptions[dataKeyState.key].orEmpty()
-            is DataKeyIsArray -> dataKeyState.fields
-            else -> emptyList()
-        }
-        return availableFields
-    }
-}
