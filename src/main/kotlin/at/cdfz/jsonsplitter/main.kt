@@ -119,10 +119,11 @@ fun main() {
         }
 
         ZentDokTheme {
-            if (showProcessingScreen.value) {
-                ProcessingScreen(documents, onCancel = ::cancelProcessing)
-            } else {
-                ViewBase {
+            ViewBase {
+                if (showProcessingScreen.value) {
+                    ProcessingScreen(documents, onCancel = ::cancelProcessing)
+                } else {
+
                     MainScreen(
                         documents,
                         recordsPerFile,

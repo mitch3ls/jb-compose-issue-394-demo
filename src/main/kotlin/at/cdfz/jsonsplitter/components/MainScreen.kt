@@ -53,41 +53,39 @@ fun MainScreen(
                     Divider(thickness = 1.dp)
                 }
             }
-            Surface {
-                Row(Modifier.fillMaxWidth()) {
-                    Button({
-                        val fd = FileDialog(null as Frame?, "Add source file", FileDialog.LOAD)
-                        fd.filenameFilter = FilenameFilter { _, name -> name.endsWith(".json") }
-                        fd.isVisible = true
-                        fd.isMultipleMode = true
+            Row(Modifier.fillMaxWidth()) {
+                Button({
+                    val fd = FileDialog(null as Frame?, "Add source file", FileDialog.LOAD)
+                    fd.filenameFilter = FilenameFilter { _, name -> name.endsWith(".json") }
+                    fd.isVisible = true
+                    fd.isMultipleMode = true
 
-                        if (fd.file == null) {
-                            return@Button
-                        }
-
-                        val chosenFile = File(fd.directory).resolve(fd.file)
-                        addFile(chosenFile)
-                    }) {
-                        Text("Add source file")
+                    if (fd.file == null) {
+                        return@Button
                     }
 
-                    Spacer(Modifier.preferredWidth(padding))
+                    val chosenFile = File(fd.directory).resolve(fd.file)
+                    addFile(chosenFile)
+                }) {
+                    Text("Add source file")
+                }
 
-                    Button({
+                Spacer(Modifier.preferredWidth(padding))
 
-                        val chosenDirectory = FilePicker.chooseFolder("Add source folder") ?: return@Button
+                Button({
 
-                        val files = chosenDirectory
-                            .walkTopDown()
-                            .filter { it.extension == "json" }
-                            .toList()
+                    val chosenDirectory = FilePicker.chooseFolder("Add source folder") ?: return@Button
 
-                        for (file in files) {
-                            addFile(file)
-                        }
-                    }) {
-                        Text("Add source folder")
+                    val files = chosenDirectory
+                        .walkTopDown()
+                        .filter { it.extension == "json" }
+                        .toList()
+
+                    for (file in files) {
+                        addFile(file)
                     }
+                }) {
+                    Text("Add source folder")
                 }
             }
         }
