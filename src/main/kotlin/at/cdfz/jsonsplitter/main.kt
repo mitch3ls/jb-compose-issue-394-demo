@@ -1,11 +1,15 @@
 package at.cdfz.jsonsplitter
 
 import androidx.compose.desktop.Window
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DesktopDialogProperties
+import androidx.compose.ui.window.Dialog
+import at.cdfz.jsonsplitter.components.InfoScreen
 import at.cdfz.jsonsplitter.components.MainScreen
 import at.cdfz.jsonsplitter.components.ProcessingScreen
 import at.cdfz.jsonsplitter.components.ViewBase
@@ -32,6 +36,7 @@ fun main() {
     Window(title = "CDFZ ToolBox", size = IntSize(800, 600), icon = image) {
 
         val showProcessingScreen = remember { mutableStateOf(false) }
+        val showInfoDialog = remember { mutableStateOf(false) }
 
         val documents = remember { mutableStateListOf<JsonDocument>() }
         val recordsPerFile = remember { mutableStateOf<Int?>(100) }
@@ -119,7 +124,7 @@ fun main() {
         }
 
         ZentDokTheme {
-            ViewBase {
+            ViewBase(onInfoClicked = { showInfoDialog.value = true }) {
                 if (showProcessingScreen.value) {
                     ProcessingScreen(documents, onCancel = ::cancelProcessing)
                 } else {
@@ -136,6 +141,17 @@ fun main() {
                             startProcessing()
                         }
                     )
+                }
+            }
+        }
+
+        if (showInfoDialog.value) {
+            Dialog(
+                onDismissRequest = { showInfoDialog.value = false }, // somehow this doesn't work
+                properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info")
+            ) {
+                ZentDokTheme {
+                    InfoScreen(onOkClicked = { showInfoDialog.value = false })
                 }
             }
         }

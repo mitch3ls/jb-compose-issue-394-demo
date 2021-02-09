@@ -17,6 +17,7 @@ import at.cdfz.jsonsplitter.padding
 @Composable
 fun ViewBase(
     modifier: Modifier = Modifier,
+    onInfoClicked: () -> Unit,
     content: @Composable () -> Unit
 ) {
     Column(Modifier.background(Color(0xffeeeeee))) {
@@ -47,7 +48,7 @@ fun ViewBase(
                     modifier = Modifier.fillMaxWidth().padding(padding).offset(x = 2.dp)
                 )
 
-                Button(onClick = {}) {
+                Button(onClick = { onInfoClicked() }) {
                     Text("Info")
                 }
             }
