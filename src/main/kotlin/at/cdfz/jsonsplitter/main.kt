@@ -8,13 +8,16 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import at.cdfz.jsonsplitter.components.MainScreen
 import at.cdfz.jsonsplitter.components.ProcessingScreen
+import at.cdfz.jsonsplitter.components.ViewBase
 import at.cdfz.jsonsplitter.controller.*
 import at.cdfz.jsonsplitter.util.Processing
 import at.cdfz.jsonsplitter.util.Processing.findPossibleDataKeys
+import java.awt.image.BufferedImage
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
+import javax.imageio.ImageIO
 
 val padding = 10.dp
 
@@ -23,110 +26,135 @@ val executor: ExecutorService = run {
     Executors.newFixedThreadPool(cores)
 }
 
-fun main() = Window(title = "JsonSplitter", size = IntSize(800, 600)) {
-    val showProcessingScreen = remember { mutableStateOf(false) }
+fun main() {
+    val image = getWindowIcon()
 
-    val documents = remember { mutableStateListOf<JsonDocument>() }
-    val recordsPerFile = remember { mutableStateOf<Int?>(100) }
-    val prettyPrintJson = remember { mutableStateOf(false) }
-    val outputPath = remember { mutableStateOf("") }
+    Window(title = "CDFZ ToolBox", size = IntSize(800, 600), icon = image) {
 
-    val runningProcessingJobs = remember { mutableStateOf<List<Future<*>>>(emptyList()) }
+        val showProcessingScreen = remember { mutableStateOf(false) }
 
-    fun replaceDocument(current: JsonDocument, new: JsonDocument): JsonDocument? {
-        val index = documents.indexOfFirst { it == current }
+        val documents = remember { mutableStateListOf<JsonDocument>() }
+        val recordsPerFile = remember { mutableStateOf<Int?>(100) }
+        val prettyPrintJson = remember { mutableStateOf(false) }
+        val outputPath = remember { mutableStateOf("") }
 
-        if (index == -1) {
-            return null
-        }
+        val runningProcessingJobs = remember { mutableStateOf<List<Future<*>>>(emptyList()) }
 
-        documents[index] = new
-        return new
-    }
+        fun replaceDocument(current: JsonDocument, new: JsonDocument): JsonDocument? {
+            val index = documents.indexOfFirst { it == current }
 
-    fun updateDocument(oldDocument: JsonDocument, updateFunction: (JsonDocument) -> JsonDocument) {
-        val currentDocumentVersion = documents.find { it == oldDocument } ?: return
-        val newDocument = updateFunction(currentDocumentVersion)
-        replaceDocument(currentDocumentVersion, newDocument)
-    }
-
-    fun startInitialProcessing(document: JsonDocument) {
-        var workingDocument = document.copy(
-            dataKeyState = DataKeyProcessing(0.0F),
-            idGenerationState = IdGenerationProcessing()
-        )
-        replaceDocument(document, workingDocument)
-
-        val worker = Runnable {
-            findPossibleDataKeys(workingDocument.file) { dataKeyState ->
-
-                val idGenerationState = when (dataKeyState) {
-                    is DataKeyIsArray, is DataKeyValue -> IdGenerationDisabled()
-                    else -> IdGenerationProcessing()
-                }
-
-                val newDocument = workingDocument.copy(
-                    dataKeyState = dataKeyState,
-                    idGenerationState = idGenerationState
-                )
-
-                workingDocument = replaceDocument(workingDocument, newDocument) ?: return@findPossibleDataKeys
+            if (index == -1) {
+                return null
             }
+
+            documents[index] = new
+            return new
         }
 
-        executor.execute(worker)
-    }
+        fun updateDocument(oldDocument: JsonDocument, updateFunction: (JsonDocument) -> JsonDocument) {
+            val currentDocumentVersion = documents.find { it == oldDocument } ?: return
+            val newDocument = updateFunction(currentDocumentVersion)
+            replaceDocument(currentDocumentVersion, newDocument)
+        }
 
-    fun addFile(file: File) {
-        val document = JsonDocument(file, DataKeyInit(), IdGenerationInit(), ProcessingInit())
-        documents.add(document)
-        startInitialProcessing(document)
-    }
+        fun startInitialProcessing(document: JsonDocument) {
+            var workingDocument = document.copy(
+                dataKeyState = DataKeyProcessing(0.0F),
+                idGenerationState = IdGenerationProcessing()
+            )
+            replaceDocument(document, workingDocument)
 
-    fun startProcessing() {
-        val workers = documents
-            .filter { document -> document.dataKeyState is DataKeyValue || document.dataKeyState is DataKeyIsArray }
-            .map { document ->
-                Runnable {
-                    Processing.splitDocument(
-                        document,
-                        outputPath.value,
-                        recordsPerFile.value!!,
-                        prettyPrintJson.value
-                    ) { processingState ->
+            val worker = Runnable {
+                findPossibleDataKeys(workingDocument.file) { dataKeyState ->
 
-                        updateDocument(document) { document ->
-                            document.copy(processingState = processingState)
+                    val idGenerationState = when (dataKeyState) {
+                        is DataKeyIsArray, is DataKeyValue -> IdGenerationDisabled()
+                        else -> IdGenerationProcessing()
+                    }
+
+                    val newDocument = workingDocument.copy(
+                        dataKeyState = dataKeyState,
+                        idGenerationState = idGenerationState
+                    )
+
+                    workingDocument = replaceDocument(workingDocument, newDocument) ?: return@findPossibleDataKeys
+                }
+            }
+
+            executor.execute(worker)
+        }
+
+        fun addFile(file: File) {
+            val document = JsonDocument(file, DataKeyInit(), IdGenerationInit(), ProcessingInit())
+            documents.add(document)
+            startInitialProcessing(document)
+        }
+
+        fun startProcessing() {
+            val workers = documents
+                .filter { document -> document.dataKeyState is DataKeyValue || document.dataKeyState is DataKeyIsArray }
+                .map { document ->
+                    Runnable {
+                        Processing.splitDocument(
+                            document,
+                            outputPath.value,
+                            recordsPerFile.value!!,
+                            prettyPrintJson.value
+                        ) { processingState ->
+
+                            updateDocument(document) { document ->
+                                document.copy(processingState = processingState)
+                            }
                         }
                     }
                 }
-            }
 
-        runningProcessingJobs.value = workers.map { executor.submit(it) }
-    }
+            runningProcessingJobs.value = workers.map { executor.submit(it) }
+        }
 
-    fun cancelProcessing() {
-        runningProcessingJobs.value.forEach { it.cancel(true) }
+        fun cancelProcessing() {
+            runningProcessingJobs.value.forEach { it.cancel(true) }
 
-        showProcessingScreen.value = false
-    }
+            showProcessingScreen.value = false
+        }
 
-    ZentDokTheme {
-        if (showProcessingScreen.value) {
-            ProcessingScreen(documents, onCancel = ::cancelProcessing)
-        } else {
-            MainScreen(
-                documents,
-                recordsPerFile,
-                prettyPrintJson,
-                outputPath,
-                addFile = ::addFile,
-                updateDocument = ::updateDocument,
-                onProcessingStart = {
-                    showProcessingScreen.value = true
-                    startProcessing()
+        ZentDokTheme {
+            if (showProcessingScreen.value) {
+                ProcessingScreen(documents, onCancel = ::cancelProcessing)
+            } else {
+                ViewBase {
+                    MainScreen(
+                        documents,
+                        recordsPerFile,
+                        prettyPrintJson,
+                        outputPath,
+                        addFile = ::addFile,
+                        updateDocument = ::updateDocument,
+                        onProcessingStart = {
+                            showProcessingScreen.value = true
+                            startProcessing()
+                        }
+                    )
                 }
-            )
+            }
         }
     }
+}
+
+fun getWindowIcon(): BufferedImage {
+    val imageFile = File("src/main/resources/images/owl.png")
+    var image: BufferedImage? = null
+    try {
+        image = ImageIO.read(imageFile)
+    } catch (e: Exception) {
+        // image file does not exist
+        println(imageFile.canonicalPath)
+        println(e)
+    }
+
+    if (image == null) {
+        image = BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB)
+    }
+
+    return image
 }
