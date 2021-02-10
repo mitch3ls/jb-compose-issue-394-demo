@@ -14,40 +14,14 @@ data class JsonDocument(
     override fun hashCode(): Int {
         return file.hashCode()
     }
-}
 
-interface WithAvailableKeys {
-    fun getAvailableFields(): List<String>
-}
+    fun isReady(): Boolean {
+        val splittingPossible = dataKeyState is DataKeyState.ObjectLike || dataKeyState is DataKeyState.Array
 
-abstract class DataKeyState
-class DataKeyInit : DataKeyState()
-data class DataKeyProcessing(val progress: Float) : DataKeyState()
-class DataKeyNoneFound : DataKeyState()
-class DataKeyInvalidDocument : DataKeyState()
-data class DataKeyIsArray(val fields: List<String>) : DataKeyState(), WithAvailableKeys {
-    override fun getAvailableFields(): List<String> {
-        return fields
+        if (idGenerationState is IdGenerationState.Enabled) {
+            return splittingPossible && idGenerationState.idField.isNotEmpty() && idGenerationState.hashFields.isNotEmpty()
+        }
+
+        return splittingPossible
     }
 }
-data class DataKeyValue(val key: String, val allOptions: Map<String, List<String>>) : DataKeyState(),
-    WithAvailableKeys {
-    override fun getAvailableFields(): List<String> {
-        return allOptions[key] ?: emptyList()
-    }
-}
-
-abstract class IdGenerationState
-class IdGenerationInit : IdGenerationState()
-class IdGenerationProcessing : IdGenerationState()
-class IdGenerationDisabled : IdGenerationState()
-data class IdGenerationEnabled(
-    val idField: String,
-    val hashFields: List<String>
-) : IdGenerationState()
-
-abstract class ProcessingState
-class ProcessingInit : ProcessingState()
-class ProcessingError : ProcessingState()
-class ProcessingProgress(val progress: Float) : ProcessingState()
-class ProcessingDone : ProcessingState()
