@@ -5,12 +5,16 @@ import at.cdfz.jsonsplitter.controller.IdGenerationState
 import at.cdfz.jsonsplitter.controller.JsonDocument
 import at.cdfz.jsonsplitter.controller.ProcessingState
 import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonEncodingException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okio.ByteString
 import okio.Okio
 import java.io.File
 import java.security.MessageDigest
+
+private val UTF8_BOM: ByteString = ByteString.decodeHex("EFBBBF")
 
 
 class DocumentNotReadyException : Exception()
@@ -62,7 +66,6 @@ object Processing {
 
             reader.endArray()
         } catch (ex: JsonDataException) {
-
         }
     }
 
@@ -173,6 +176,10 @@ object Processing {
         } catch (ex: JsonDataException) {
             notify(ProcessingEvent.InvalidDocument)
             println(ex.message)
+        } catch (ex: JsonEncodingException) {
+            notify(ProcessingEvent.InvalidDocument)
+            ex.printStackTrace()
+            println(ex.message)
         }
     }
 
@@ -203,7 +210,16 @@ object Processing {
 
         bufferedSource.inputStream().available()
 
-        return JsonReader.of(bufferedSource)
+        // handle UTF-8 BOM
+        // taken from https://github.com/square/retrofit/blob/2583d360fa39792f87faf7f69afefaadf3944536/retrofit-converters/moshi/src/main/java/retrofit2/converter/moshi/MoshiResponseBodyConverter.java#L36
+        if (bufferedSource.rangeEquals(0, UTF8_BOM)) {
+            bufferedSource.skip(UTF8_BOM.size().toLong());
+        }
+
+        val reader = JsonReader.of(bufferedSource)
+        //reader.isLenient = true
+
+        return reader
     }
 
     private fun generateId(document: JsonDocument, record: Map<*, *>): String {
