@@ -201,7 +201,7 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                         dropdownModifier = Modifier.heightIn(max = 260.dp) // HACK to prevent overflows - this shouldn't be necessary
                     ) {
                         if (document.dataKeyState is DataKeyState.HasAvailableRecordFields) {
-                            document.dataKeyState.getAvailableFields().forEach { thisField ->
+                            document.dataKeyState.fields.forEach { thisField ->
 
                                 fun clicked() {
                                     onUpdate { document ->
