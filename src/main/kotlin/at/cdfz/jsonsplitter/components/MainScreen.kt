@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import at.cdfz.jsonsplitter.controller.DataKeyState
 import at.cdfz.jsonsplitter.controller.JsonDocument
-import at.cdfz.jsonsplitter.controller.WithAvailableKeys
 import at.cdfz.jsonsplitter.padding
 import at.cdfz.jsonsplitter.util.FilePicker
 import java.awt.FileDialog
@@ -52,6 +52,7 @@ fun MainScreen(
                         })
                     Divider(thickness = 1.dp)
                 }
+                Spinner()
             }
             Row(Modifier.fillMaxWidth()) {
                 Button({
@@ -149,7 +150,7 @@ fun MainScreen(
             enabled = documents.isNotEmpty() &&
                     recordsPerFile.value != null &&
                     outputPath.value.isNotEmpty() &&
-                    documents.all { it.dataKeyState is WithAvailableKeys }
+                    documents.all { it.isReady() }
         ) {
             Text("Split files")
         }

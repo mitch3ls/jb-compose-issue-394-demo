@@ -1,19 +1,22 @@
 package at.cdfz.jsonsplitter.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerMoveFilter
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import at.cdfz.jsonsplitter.controller.*
 import at.cdfz.jsonsplitter.padding
 import java.io.File
@@ -22,7 +25,6 @@ import java.io.File
 fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocument) -> Unit, onRemove: () -> Unit) {
 
     val hoveringOverPath = remember { mutableStateOf(false) }
-    val showKeyDropdown = remember { mutableStateOf(false) }
     val showIdGenerationDropdown = remember { mutableStateOf(false) }
 
     Row(
@@ -57,68 +59,77 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
         Spacer(Modifier.preferredWidth(padding))
 
         when (document.dataKeyState) {
-            is DataKeyProcessing -> {
-                Text("processing...")
+            is DataKeyState.Init,
+            is DataKeyState.Processing -> {
+                Spinner(Modifier.preferredSize(25.dp))
             }
-            is DataKeyValue -> {
+            is DataKeyState.IncompleteObject -> {
                 val state = document.dataKeyState
-                if (state.allOptions.size == 1) {
-                    Text("\"${state.key}\"")
-                } else {
-                    DropdownMenu(
-                        toggle = {
-                            Row(
-                                modifier = Modifier.clickable(onClick = { showKeyDropdown.value = true }),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "\"${state.key}\"",
-                                )
 
-                                Icon(Icons.Filled.ArrowDropDown)
-                            }
-                        },
-                        expanded = showKeyDropdown.value,
-                        onDismissRequest = { showKeyDropdown.value = false }
-                    ) {
-                        state.allOptions.forEach {
-                            DropdownMenuItem(
-                                onClick = {
-                                    onUpdate { document ->
-                                        document.copy(
-                                            dataKeyState = state.copy(
-                                                key = it.key
-                                            )
-                                        )
-                                    }
-                                }
-                            ) {
-                                Text("\"${it.key}\"")
-                            }
-                        }
+                DataKeyField(state.key, state.allOptions, loading = true, onChange = { key ->
+                    onUpdate { document ->
+                        document.copy(
+                            dataKeyState = state.copy(
+                                key = key
+                            )
+                        )
                     }
-                }
+                })
             }
-            is DataKeyIsArray -> {
+            is DataKeyState.Object -> {
+                val state = document.dataKeyState
+
+                DataKeyField(state.key, state.allOptions, loading = false, onChange = { key ->
+                    onUpdate { document ->
+                        document.copy(
+                            dataKeyState = state.copy(
+                                key = key
+                            )
+                        )
+                    }
+                })
+            }
+            is DataKeyState.IncompleteArray,
+            is DataKeyState.Array -> {
                 Text("global array")
             }
-            is DataKeyNoneFound -> Text("no key found", color = MaterialTheme.colors.secondary)
-            is DataKeyInvalidDocument -> Text("invalid document", color = MaterialTheme.colors.secondary)
+            is DataKeyState.NoKeyFound -> Text("no key found", color = MaterialTheme.colors.secondary)
+            is DataKeyState.InvalidDocument -> Text("invalid document", color = MaterialTheme.colors.secondary)
         }
 
         when (document.idGenerationState) {
-            is IdGenerationDisabled -> {
+            is IdGenerationState.Init,
+            is IdGenerationState.Processing -> {
+                Spacer(Modifier.preferredWidth(padding))
+                Spacer(Modifier.preferredWidth(padding))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Generate ID", color = Color.LightGray)
+                    Spacer(Modifier.preferredWidth(5.dp))
+                    Spinner(Modifier.preferredSize(25.dp))
+                }
+            }
+            is IdGenerationState.Unavailable -> {
+                Spacer(Modifier.preferredWidth(padding))
+                Spacer(Modifier.preferredWidth(padding))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Generate ID", color = Color.LightGray)
+                    Spacer(Modifier.preferredWidth(5.dp))
+                    Icon(Icons.Filled.Warning, modifier = Modifier.offset(y = -2.dp))
+                }
+            }
+            is IdGenerationState.Disabled -> {
                 Spacer(Modifier.preferredWidth(padding))
                 Spacer(Modifier.preferredWidth(padding))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Generate ID")
+                    Spacer(Modifier.preferredWidth(5.dp))
                     Checkbox(
                         checked = false,
                         onCheckedChange = { checked ->
                             if (checked) {
                                 onUpdate { document ->
                                     document.copy(
-                                        idGenerationState = IdGenerationEnabled("", hashFields = emptyList())
+                                        idGenerationState = IdGenerationState.Enabled("", hashFields = emptyList())
                                     )
                                 }
                             }
@@ -126,7 +137,7 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                     )
                 }
             }
-            is IdGenerationEnabled -> {
+            is IdGenerationState.Enabled -> {
 
                 Spacer(Modifier.preferredWidth(padding))
                 Spacer(Modifier.preferredWidth(padding))
@@ -136,13 +147,14 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Generate ID")
+                        Spacer(Modifier.preferredWidth(5.dp))
                         Checkbox(
                             checked = true,
                             onCheckedChange = { checked ->
                                 if (!checked) {
                                     onUpdate { document ->
                                         document.copy(
-                                            idGenerationState = IdGenerationDisabled()
+                                            idGenerationState = IdGenerationState.Disabled
                                         )
                                     }
                                 }
@@ -157,7 +169,7 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                         onValueChange = {
                             onUpdate { document ->
                                 document.copy(
-                                    idGenerationState = (document.idGenerationState as IdGenerationEnabled).copy(
+                                    idGenerationState = (document.idGenerationState as IdGenerationState.Enabled).copy(
                                         idField = it
                                     )
                                 )
@@ -186,12 +198,12 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                         expanded = showIdGenerationDropdown.value,
                         onDismissRequest = { showIdGenerationDropdown.value = false }
                     ) {
-                        if (document.dataKeyState is WithAvailableKeys) {
+                        if (document.dataKeyState is DataKeyState.HasAvailableRecordFields) {
                             document.dataKeyState.getAvailableFields().forEach { thisField ->
 
                                 fun clicked() {
                                     onUpdate { document ->
-                                        document.idGenerationState as IdGenerationEnabled
+                                        document.idGenerationState as IdGenerationState.Enabled
                                         val currentlyChecked = document.idGenerationState.hashFields.contains(thisField)
 
                                         val newHashFields: List<String>
@@ -235,6 +247,61 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
             onRemove()
         }) {
             Icon(Icons.Filled.Delete)
+        }
+    }
+}
+
+@Composable
+fun DataKeyField(
+    key: String?,
+    allOptions: Map<String, List<String>>,
+    loading: Boolean = false,
+    onChange: (String) -> Unit
+) {
+    val showDropDown = remember { mutableStateOf(false) }
+
+    if (key == null) {
+        return Spinner(Modifier.preferredSize(25.dp))
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+
+
+        if (allOptions.size < 2) {
+
+            Text("\"${key}\"")
+
+
+        } else {
+            DropdownMenu(
+                toggle = {
+                    Row(
+                        modifier = Modifier.clickable(onClick = { showDropDown.value = true }),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "\"${key}\"",
+                        )
+
+                        Icon(Icons.Filled.ArrowDropDown)
+                    }
+                },
+                expanded = showDropDown.value,
+                onDismissRequest = { showDropDown.value = false }
+            ) {
+                allOptions.forEach {
+                    DropdownMenuItem(
+                        onClick = {
+                            onChange(it.key)
+                        }
+                    ) {
+                        Text("\"${it.key}\"")
+                    }
+                }
+            }
+        }
+        if (loading) {
+            Spacer(Modifier.preferredWidth(5.dp))
+            Spinner(Modifier.preferredSize(25.dp))
         }
     }
 }

@@ -22,7 +22,7 @@ object Processing {
         val dataKeyState = document.dataKeyState
         val idGenerationState = document.idGenerationState
 
-        if (dataKeyState !is DataKeyValue && dataKeyState !is DataKeyIsArray) {
+        if (!document.isReady()) {
             // document not ready
             throw DocumentNotReadyException()
         }
@@ -31,7 +31,7 @@ object Processing {
 
             val reader = jsonReaderFromFile(document.file)
 
-            if (dataKeyState is DataKeyValue) {
+            if (dataKeyState is DataKeyState.ObjectLike) {
                 reader.beginObject()
 
                 while (reader.nextName() != dataKeyState.key) {
@@ -50,7 +50,7 @@ object Processing {
 
                 val record = readValue.toMutableMap()
 
-                if (idGenerationState is IdGenerationEnabled) {
+                if (idGenerationState is IdGenerationState.Enabled) {
                     val id = generateId(document, record)
 
                     record[idGenerationState.idField] = id
@@ -72,7 +72,7 @@ object Processing {
         prettyPrint: Boolean,
         callback: (ProcessingState) -> Unit
     ) {
-        callback(ProcessingInit())
+        callback(ProcessingState.Init)
 
         val sourceFile = document.file
         val baseName = sourceFile.nameWithoutExtension
@@ -105,16 +105,26 @@ object Processing {
 
                 bytesWritten += json.length
                 val progress = (bytesWritten / totalLength).toFloat()
-                callback(ProcessingProgress(progress))
+                callback(ProcessingState.Progress(progress))
             }
 
-            callback(ProcessingDone())
+            callback(ProcessingState.Done)
         } catch (ex: DocumentNotReadyException) {
-            callback(ProcessingError())
+            callback(ProcessingState.Error)
         }
     }
 
-    fun findPossibleDataKeys(file: File, callback: (DataKeyState) -> Unit) {
+    sealed class ProcessingEvent {
+        object IsArray : ProcessingEvent()
+        object ArrayNoFieldsFound : ProcessingEvent()
+        data class ArrayFieldsFound(val fields: List<String>) : ProcessingEvent()
+        object IsObject : ProcessingEvent()
+        data class KeyFound(val key: String, val fields: List<String>) : ProcessingEvent()
+        object ObjectFinished : ProcessingEvent()
+        object InvalidDocument : ProcessingEvent()
+    }
+
+    fun findPossibleDataKeys(file: File, notify: (ProcessingEvent) -> Unit) {
         try {
 
             val reader = jsonReaderFromFile(file)
@@ -123,16 +133,20 @@ object Processing {
 
             when (firstToken) {
                 JsonReader.Token.BEGIN_ARRAY -> {
+                    notify(ProcessingEvent.IsArray)
+
                     val fields = findPossibleRecordFields(reader)
 
                     if (fields.isEmpty()) {
-                        callback(DataKeyNoneFound())
+                        notify(ProcessingEvent.ArrayNoFieldsFound)
                         return
                     }
 
-                    callback(DataKeyIsArray(fields))
+                    notify(ProcessingEvent.ArrayFieldsFound(fields))
                 }
                 JsonReader.Token.BEGIN_OBJECT -> {
+                    notify(ProcessingEvent.IsObject)
+
                     val possibleKeys = mutableMapOf<String, List<String>>()
 
                     reader.beginObject()
@@ -142,26 +156,21 @@ object Processing {
                         val peekReader = reader.peekJson()
                         val fields = findPossibleRecordFields(peekReader)
 
-                        reader.skipValue()
-
                         if (fields.isNullOrEmpty()) {
                             continue
                         }
 
+                        notify(ProcessingEvent.KeyFound(key, fields))
                         possibleKeys.put(key, fields)
+
+                        reader.skipValue()
                     }
 
-                    if (possibleKeys.isNotEmpty()) {
-                        callback(DataKeyValue(possibleKeys.keys.first(), possibleKeys))
-                    } else {
-                        callback(DataKeyNoneFound())
-                    }
+                    notify(ProcessingEvent.ObjectFinished)
                 }
-
-                else -> callback(DataKeyInvalidDocument())
             }
         } catch (ex: JsonDataException) {
-            callback(DataKeyInvalidDocument())
+            notify(ProcessingEvent.InvalidDocument)
             println(ex.message)
         }
     }
@@ -175,6 +184,7 @@ object Processing {
 
         while (reader.hasNext()) {
             val name = reader.nextName()
+
             reader.skipValue()
 
             possibleRecordFields.add(name)
@@ -198,7 +208,7 @@ object Processing {
     fun generateId(document: JsonDocument, record: Map<*, *>): String {
         val idGenerationState = document.idGenerationState
 
-        if (idGenerationState !is IdGenerationEnabled) {
+        if (idGenerationState !is IdGenerationState.Enabled) {
             throw DocumentNotReadyException()
         }
 

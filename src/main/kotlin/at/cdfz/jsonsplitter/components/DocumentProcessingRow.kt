@@ -1,11 +1,9 @@
 package at.cdfz.jsonsplitter.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,7 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.style.TextOverflow
-import at.cdfz.jsonsplitter.controller.*
+import at.cdfz.jsonsplitter.controller.JsonDocument
+import at.cdfz.jsonsplitter.controller.ProcessingState
 import at.cdfz.jsonsplitter.padding
 import java.io.File
 
@@ -54,10 +53,10 @@ fun DocumentProcessingRow(document: JsonDocument) {
         Spacer(Modifier.preferredWidth(padding))
 
         when (document.processingState) {
-            is ProcessingInit -> Text("pending...")
-            is ProcessingProgress -> LinearProgressIndicator(progress = document.processingState.progress)
-            is ProcessingDone -> Text("done")
-            is ProcessingError -> Text("ERROR", color = MaterialTheme.colors.secondary)
+            is ProcessingState.Init -> Text("pending...")
+            is ProcessingState.Progress -> LinearProgressIndicator(progress = document.processingState.progress)
+            is ProcessingState.Done -> Text("done")
+            is ProcessingState.Error -> Text("ERROR", color = MaterialTheme.colors.secondary)
         }
     }
 }

@@ -1,7 +1,6 @@
 package at.cdfz.jsonsplitter
 
 import androidx.compose.desktop.Window
-import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,7 +12,10 @@ import at.cdfz.jsonsplitter.components.InfoScreen
 import at.cdfz.jsonsplitter.components.MainScreen
 import at.cdfz.jsonsplitter.components.ProcessingScreen
 import at.cdfz.jsonsplitter.components.ViewBase
-import at.cdfz.jsonsplitter.controller.*
+import at.cdfz.jsonsplitter.controller.DataKeyState
+import at.cdfz.jsonsplitter.controller.IdGenerationState
+import at.cdfz.jsonsplitter.controller.JsonDocument
+import at.cdfz.jsonsplitter.controller.ProcessingState
 import at.cdfz.jsonsplitter.util.Processing
 import at.cdfz.jsonsplitter.util.Processing.findPossibleDataKeys
 import java.awt.image.BufferedImage
@@ -63,26 +65,72 @@ fun main() {
         }
 
         fun startInitialProcessing(document: JsonDocument) {
-            var workingDocument = document.copy(
-                dataKeyState = DataKeyProcessing(0.0F),
-                idGenerationState = IdGenerationProcessing()
+            val workingDocument = document.copy(
+                dataKeyState = DataKeyState.Processing,
+                idGenerationState = IdGenerationState.Processing
             )
             replaceDocument(document, workingDocument)
 
             val worker = Runnable {
-                findPossibleDataKeys(workingDocument.file) { dataKeyState ->
+                findPossibleDataKeys(workingDocument.file) { event ->
+                    updateDocument(workingDocument) { document ->
 
-                    val idGenerationState = when (dataKeyState) {
-                        is DataKeyIsArray, is DataKeyValue -> IdGenerationDisabled()
-                        else -> IdGenerationProcessing()
+                        when (event) {
+                            is Processing.ProcessingEvent.IsArray -> document.copy(
+                                dataKeyState = DataKeyState.IncompleteArray
+                            )
+                            is Processing.ProcessingEvent.ArrayNoFieldsFound -> document.copy(
+                                dataKeyState = DataKeyState.Array(emptyList()),
+                                idGenerationState = IdGenerationState.Unavailable
+                            )
+                            is Processing.ProcessingEvent.ArrayFieldsFound -> document.copy(
+                                dataKeyState = DataKeyState.Array(event.fields),
+                                idGenerationState = IdGenerationState.Disabled
+                            )
+                            is Processing.ProcessingEvent.IsObject -> document.copy(
+                                dataKeyState = DataKeyState.IncompleteObject(null, emptyMap())
+                            )
+                            is Processing.ProcessingEvent.KeyFound -> {
+                                document.dataKeyState as DataKeyState.IncompleteObject
+
+                                val currentOptions = document.dataKeyState.allOptions.toMutableMap()
+                                currentOptions[event.key] = event.fields
+
+                                document.copy(
+                                    dataKeyState = document.dataKeyState.copy(
+                                        key = document.dataKeyState.key ?: event.key,
+                                        allOptions = currentOptions
+                                    ),
+                                    idGenerationState = IdGenerationState.Disabled
+                                )
+                            }
+                            is Processing.ProcessingEvent.ObjectFinished -> {
+                                val result: JsonDocument
+
+                                val oldState = document.dataKeyState as DataKeyState.IncompleteObject
+
+                                val firstOption = oldState.allOptions.keys.firstOrNull()
+                                result = if (firstOption == null) {
+                                    document.copy(
+                                        dataKeyState = DataKeyState.NoKeyFound,
+                                        idGenerationState = IdGenerationState.Unavailable
+                                    )
+                                } else {
+                                    val key = oldState.key ?: firstOption
+                                    document.copy(
+                                        dataKeyState = DataKeyState.Object(key, oldState.allOptions)
+                                    )
+                                }
+
+                                result
+                            }
+                            is Processing.ProcessingEvent.InvalidDocument -> workingDocument.copy(
+                                dataKeyState = DataKeyState.InvalidDocument,
+                                idGenerationState = IdGenerationState.Unavailable
+                            )
+                        }
+
                     }
-
-                    val newDocument = workingDocument.copy(
-                        dataKeyState = dataKeyState,
-                        idGenerationState = idGenerationState
-                    )
-
-                    workingDocument = replaceDocument(workingDocument, newDocument) ?: return@findPossibleDataKeys
                 }
             }
 
@@ -90,14 +138,14 @@ fun main() {
         }
 
         fun addFile(file: File) {
-            val document = JsonDocument(file, DataKeyInit(), IdGenerationInit(), ProcessingInit())
+            val document = JsonDocument(file, DataKeyState.Init, IdGenerationState.Init, ProcessingState.Init)
             documents.add(document)
             startInitialProcessing(document)
         }
 
         fun startProcessing() {
             val workers = documents
-                .filter { document -> document.dataKeyState is DataKeyValue || document.dataKeyState is DataKeyIsArray }
+                .filter { document -> document.dataKeyState is DataKeyState.Array || document.dataKeyState is DataKeyState.Object }
                 .map { document ->
                     Runnable {
                         Processing.splitDocument(
@@ -126,7 +174,10 @@ fun main() {
         ZentDokTheme {
             ViewBase(onInfoClicked = { showInfoDialog.value = true }) {
                 if (showProcessingScreen.value) {
-                    ProcessingScreen(documents, onCancel = ::cancelProcessing)
+                    ProcessingScreen(
+                        documents,
+                        onCancel = ::cancelProcessing,
+                        onBack = { showProcessingScreen.value = false })
                 } else {
 
                     MainScreen(

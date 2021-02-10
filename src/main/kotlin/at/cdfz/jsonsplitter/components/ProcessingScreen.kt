@@ -15,12 +15,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import at.cdfz.jsonsplitter.controller.JsonDocument
+import at.cdfz.jsonsplitter.controller.ProcessingState
 import at.cdfz.jsonsplitter.padding
 
 @Composable
 fun ProcessingScreen(
     documents: SnapshotStateList<JsonDocument>,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onBack: () -> Unit
 ) = Box(
     modifier = Modifier.fillMaxSize(),
     contentAlignment = Alignment.Center
@@ -44,10 +46,18 @@ fun ProcessingScreen(
         Spacer(Modifier.preferredHeight(padding))
 
         Row(Modifier.fillMaxWidth()) {
-            Button({
-                onCancel()
-            }) {
-                Text("Cancel")
+            if (documents.any { it.processingState is ProcessingState.Init || it.processingState is ProcessingState.Progress }) {
+                Button({
+                    onCancel()
+                }) {
+                    Text("Cancel")
+                }
+            } else {
+                Button({
+                    onBack()
+                }) {
+                    Text("Back")
+                }
             }
         }
     }
