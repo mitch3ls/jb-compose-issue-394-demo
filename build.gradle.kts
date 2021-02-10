@@ -24,7 +24,7 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.11.0")
 }
 
-tasks.withType<KotlinCompile>() {
+tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "11"
 }
 
