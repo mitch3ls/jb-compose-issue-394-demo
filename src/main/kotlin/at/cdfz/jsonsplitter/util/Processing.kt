@@ -1,6 +1,9 @@
 package at.cdfz.jsonsplitter.util
 
-import at.cdfz.jsonsplitter.controller.*
+import at.cdfz.jsonsplitter.controller.DataKeyState
+import at.cdfz.jsonsplitter.controller.IdGenerationState
+import at.cdfz.jsonsplitter.controller.JsonDocument
+import at.cdfz.jsonsplitter.controller.ProcessingState
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
@@ -10,15 +13,13 @@ import java.io.File
 import java.security.MessageDigest
 
 
-class DocumentNotReadyException : Exception() {
-}
+class DocumentNotReadyException : Exception()
 
-class UnexpectedValueException : Exception() {
-}
+class UnexpectedValueException : Exception()
 
 object Processing {
 
-    fun parseRecords(document: JsonDocument) = sequence {
+    private fun parseRecords(document: JsonDocument) = sequence {
         val dataKeyState = document.dataKeyState
         val idGenerationState = document.idGenerationState
 
@@ -161,7 +162,7 @@ object Processing {
                         }
 
                         notify(ProcessingEvent.KeyFound(key, fields))
-                        possibleKeys.put(key, fields)
+                        possibleKeys[key] = fields
 
                         reader.skipValue()
                     }
@@ -175,7 +176,7 @@ object Processing {
         }
     }
 
-    fun findPossibleRecordFields(reader: JsonReader): List<String> {
+    private fun findPossibleRecordFields(reader: JsonReader): List<String> {
         val possibleRecordFields = mutableListOf<String>()
 
 
@@ -196,7 +197,7 @@ object Processing {
         return possibleRecordFields
     }
 
-    fun jsonReaderFromFile(file: File): JsonReader {
+    private fun jsonReaderFromFile(file: File): JsonReader {
         val source = Okio.source(file)
         val bufferedSource = Okio.buffer(source)
 
@@ -205,7 +206,7 @@ object Processing {
         return JsonReader.of(bufferedSource)
     }
 
-    fun generateId(document: JsonDocument, record: Map<*, *>): String {
+    private fun generateId(document: JsonDocument, record: Map<*, *>): String {
         val idGenerationState = document.idGenerationState
 
         if (idGenerationState !is IdGenerationState.Enabled) {

@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
-import at.cdfz.jsonsplitter.controller.DataKeyState
 import at.cdfz.jsonsplitter.controller.JsonDocument
 import at.cdfz.jsonsplitter.padding
 import at.cdfz.jsonsplitter.util.FilePicker

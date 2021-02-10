@@ -3,6 +3,7 @@ package at.cdfz.jsonsplitter.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
+import kotlin.math.min
 
 @Composable
 fun PathRow(
@@ -27,10 +28,10 @@ fun PathRow(
         val placeables = otherPlaceables.plus(lastPlaceable)
 
         val preferredWidth = placeables.map { it.width }.sum()
-        val calculatedWidth = Math.min(preferredWidth, constraints.maxWidth)
+        val calculatedWidth = min(preferredWidth, constraints.maxWidth)
 
         val preferredHeight = placeables.map { it.height }.maxOrNull() ?: 0
-        val calculatedHeight = Math.min(preferredHeight, constraints.maxHeight)
+        val calculatedHeight = min(preferredHeight, constraints.maxHeight)
 
         // Set the size of the layout as big as it can
         layout(calculatedWidth, calculatedHeight) {

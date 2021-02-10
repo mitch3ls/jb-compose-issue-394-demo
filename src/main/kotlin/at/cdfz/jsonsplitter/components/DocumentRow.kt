@@ -1,6 +1,5 @@
 package at.cdfz.jsonsplitter.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -17,7 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import at.cdfz.jsonsplitter.controller.*
+import at.cdfz.jsonsplitter.controller.DataKeyState
+import at.cdfz.jsonsplitter.controller.IdGenerationState
+import at.cdfz.jsonsplitter.controller.JsonDocument
 import at.cdfz.jsonsplitter.padding
 import java.io.File
 
@@ -206,13 +207,10 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                                         document.idGenerationState as IdGenerationState.Enabled
                                         val currentlyChecked = document.idGenerationState.hashFields.contains(thisField)
 
-                                        val newHashFields: List<String>
-
-                                        if (currentlyChecked) {
-                                            newHashFields =
-                                                document.idGenerationState.hashFields.filter { it != thisField }
+                                        val newHashFields = if (currentlyChecked) {
+                                            document.idGenerationState.hashFields.filter { it != thisField }
                                         } else {
-                                            newHashFields = document.idGenerationState.hashFields.plus(thisField)
+                                            document.idGenerationState.hashFields.plus(thisField)
                                         }
 
                                         document.copy(

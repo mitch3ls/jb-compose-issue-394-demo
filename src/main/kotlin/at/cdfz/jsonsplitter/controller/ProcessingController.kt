@@ -1,8 +1,6 @@
 package at.cdfz.jsonsplitter.controller
 
 //import at.cdfz.jsonsplitter.util.Processing.findPossibleDataKeys
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 /*class ProcessingController : Controller() {
     val documents = ArrayList<JsonDocument>().asObservable()

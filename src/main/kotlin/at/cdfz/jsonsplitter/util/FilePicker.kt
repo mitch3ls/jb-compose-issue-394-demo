@@ -25,12 +25,12 @@ object FilePicker {
             chosenDirectory = File(fd.directory).resolve(fd.file)
         } else {
             val chooser = JFileChooser()
-            chooser.setDialogTitle(message)
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.dialogTitle = message
+            chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
             //
             // disable the "All files" option.
             //
-            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.isAcceptAllFileFilterUsed = false
             //
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 chosenDirectory = chooser.selectedFile
