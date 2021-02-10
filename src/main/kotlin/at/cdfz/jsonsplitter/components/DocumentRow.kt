@@ -197,7 +197,8 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                             }
                         },
                         expanded = showIdGenerationDropdown.value,
-                        onDismissRequest = { showIdGenerationDropdown.value = false }
+                        onDismissRequest = { showIdGenerationDropdown.value = false },
+                        dropdownModifier = Modifier.heightIn(max = 260.dp) // HACK to prevent overflows - this shouldn't be necessary
                     ) {
                         if (document.dataKeyState is DataKeyState.HasAvailableRecordFields) {
                             document.dataKeyState.getAvailableFields().forEach { thisField ->
@@ -229,6 +230,7 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
                                                 clicked()
                                             }
                                         )
+                                        Spacer(Modifier.preferredWidth(5.dp))
                                         Text("\"$thisField\"")
                                     }
                                 }
