@@ -199,7 +199,7 @@ fun main() {
         if (showInfoDialog.value) {
             Dialog(
                 onDismissRequest = { showInfoDialog.value = false }, // somehow this doesn't work
-                properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info")
+                properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info", icon = image)
             ) {
                 ZentDokTheme {
                     InfoScreen(onOkClicked = { showInfoDialog.value = false })
