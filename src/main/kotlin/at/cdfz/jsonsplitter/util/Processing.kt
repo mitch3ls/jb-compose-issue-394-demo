@@ -5,7 +5,6 @@ import at.cdfz.jsonsplitter.controller.IdGenerationState
 import at.cdfz.jsonsplitter.controller.JsonDocument
 import at.cdfz.jsonsplitter.controller.ProcessingState
 import com.squareup.moshi.JsonDataException
-import com.squareup.moshi.JsonEncodingException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -20,6 +19,8 @@ private val UTF8_BOM: ByteString = ByteString.decodeHex("EFBBBF")
 class DocumentNotReadyException : Exception()
 
 class UnexpectedValueException : Exception()
+
+class UnexpectedTokenException(val token: JsonReader.Token) : Exception()
 
 object Processing {
 
@@ -66,6 +67,7 @@ object Processing {
 
             reader.endArray()
         } catch (ex: JsonDataException) {
+            // TODO: proper error handling
         }
     }
 
@@ -125,7 +127,7 @@ object Processing {
         object IsObject : ProcessingEvent()
         data class KeyFound(val key: String, val fields: List<String>) : ProcessingEvent()
         object ObjectFinished : ProcessingEvent()
-        object InvalidDocument : ProcessingEvent()
+        data class Error(val ex: Exception) : ProcessingEvent()
     }
 
     fun findPossibleDataKeys(file: File, notify: (ProcessingEvent) -> Unit) {
@@ -172,14 +174,10 @@ object Processing {
 
                     notify(ProcessingEvent.ObjectFinished)
                 }
+                else -> throw UnexpectedTokenException(firstToken)
             }
-        } catch (ex: JsonDataException) {
-            notify(ProcessingEvent.InvalidDocument)
-            println(ex.message)
-        } catch (ex: JsonEncodingException) {
-            notify(ProcessingEvent.InvalidDocument)
-            ex.printStackTrace()
-            println(ex.message)
+        } catch (ex: Exception) {
+            notify(ProcessingEvent.Error(ex))
         }
     }
 

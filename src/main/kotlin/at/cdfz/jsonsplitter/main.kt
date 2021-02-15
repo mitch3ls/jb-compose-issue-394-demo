@@ -124,7 +124,7 @@ fun main() {
 
                                 result
                             }
-                            is Processing.ProcessingEvent.InvalidDocument -> workingDocument.copy(
+                            is Processing.ProcessingEvent.Error -> workingDocument.copy(
                                 dataKeyState = DataKeyState.InvalidDocument,
                                 idGenerationState = IdGenerationState.Unavailable
                             )
