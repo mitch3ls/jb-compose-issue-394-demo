@@ -32,7 +32,7 @@ compose.desktop {
     application {
         mainClass = "at.cdfz.jsonsplitter.MainKt"
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.AppImage)
             packageName = "json_splitter"
 
             // needed for native distribution with Okio (uses logging internally)
