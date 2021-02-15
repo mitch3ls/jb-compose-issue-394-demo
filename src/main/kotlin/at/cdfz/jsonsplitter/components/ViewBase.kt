@@ -45,7 +45,7 @@ fun ViewBase(
             ) {
                 Image(
                     bitmap = imageResource("images/owl.png"),
-                    modifier = Modifier.fillMaxWidth().padding(padding).offset(x = 2.dp)
+                    modifier = Modifier.fillMaxWidth().padding(padding)
                 )
 
                 Button(onClick = { onInfoClicked() }) {
