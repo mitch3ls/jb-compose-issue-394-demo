@@ -37,6 +37,8 @@ compose.desktop {
 
             // needed for native distribution with Okio (uses logging internally)
             modules("java.logging")
+
+            windows { shortcut = true }
         }
     }
 }
