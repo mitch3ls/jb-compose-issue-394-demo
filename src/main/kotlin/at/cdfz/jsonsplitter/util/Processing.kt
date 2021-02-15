@@ -103,7 +103,8 @@ object Processing {
             var chunksWritten = 0
             for (chunk in chunks) {
                 chunksWritten++
-                val filename = "$baseName.$chunksWritten.json"
+                val batchNumberString = String.format("%04d", chunksWritten)
+                val filename = "${baseName}_$batchNumberString.json"
                 val destinationFile = File(destinationPath).resolve(filename)
 
                 val json = adapter.toJson(chunk)
