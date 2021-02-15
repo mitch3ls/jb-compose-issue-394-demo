@@ -211,13 +211,10 @@ object Processing {
         // handle UTF-8 BOM
         // taken from https://github.com/square/retrofit/blob/2583d360fa39792f87faf7f69afefaadf3944536/retrofit-converters/moshi/src/main/java/retrofit2/converter/moshi/MoshiResponseBodyConverter.java#L36
         if (bufferedSource.rangeEquals(0, UTF8_BOM)) {
-            bufferedSource.skip(UTF8_BOM.size().toLong());
+            bufferedSource.skip(UTF8_BOM.size().toLong())
         }
 
-        val reader = JsonReader.of(bufferedSource)
-        //reader.isLenient = true
-
-        return reader
+        return JsonReader.of(bufferedSource)
     }
 
     private fun generateId(document: JsonDocument, record: Map<*, *>): String {
