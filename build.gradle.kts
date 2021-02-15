@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "at.cdfz"
-version = "1.2"
+version = "1.2" // also change in components/InfoScreen.kt
 
 repositories {
     jcenter()

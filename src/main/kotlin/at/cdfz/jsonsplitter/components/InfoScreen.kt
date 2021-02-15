@@ -26,7 +26,8 @@ fun InfoScreen(onOkClicked: () -> Unit) = Column(Modifier.fillMaxSize()) {
                         "created in: 2021\n" +
                         "Rekr Kudler (2021)\n" +
                         "last update:\n" +
-                        "09.02.2021, Kudler\n"
+                        "09.02.2021, Kudler\n" +
+                        "version: 1.2"  // also change in build.gradle.kts
             )
 
             Spacer(Modifier.preferredHeight(padding))
