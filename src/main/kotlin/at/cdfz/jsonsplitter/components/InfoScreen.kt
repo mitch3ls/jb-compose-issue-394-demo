@@ -20,7 +20,7 @@ fun InfoScreen(onOkClicked: () -> Unit) = Column(Modifier.fillMaxSize()) {
         Text(
             "Developed by:\n" +
                     "LVAk/ZentDok/CDFZ\n" +
-                    "created od: 2021\n" +
+                    "created in: 2021\n" +
                     "Rekr Kudler (2021)\n" +
                     "last update:\n" +
                     "09.02.2021, Kudler\n"
