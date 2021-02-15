@@ -34,6 +34,9 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "json_splitter"
+
+            // needed for native distribution with Okio (uses logging internally)
+            modules("java.logging")
         }
     }
 }
