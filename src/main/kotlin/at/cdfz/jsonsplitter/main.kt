@@ -21,20 +21,17 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import javax.imageio.ImageIO
-import kotlin.time.ExperimentalTime
 
 val padding = 10.dp
+val appIcon = run { getWindowIcon() }
 
 val executor: ExecutorService = run {
     val cores = Runtime.getRuntime().availableProcessors()
     Executors.newFixedThreadPool(cores)
 }
 
-@ExperimentalTime
 fun main() {
-    val image = getWindowIcon()
-
-    Window(title = "CDFZ ToolBox", size = IntSize(800, 600), icon = image) {
+    Window(title = "CDFZ ToolBox", size = IntSize(800, 600), icon = appIcon) {
 
         val showProcessingScreen = remember { mutableStateOf(false) }
         val showInfoDialog = remember { mutableStateOf(false) }
@@ -198,7 +195,7 @@ fun main() {
         if (showInfoDialog.value) {
             Dialog(
                 onDismissRequest = { showInfoDialog.value = false }, // somehow this doesn't work
-                properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info", icon = image)
+                properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info", icon = appIcon)
             ) {
                 ZentDokTheme {
                     InfoScreen(onOkClicked = { showInfoDialog.value = false })
