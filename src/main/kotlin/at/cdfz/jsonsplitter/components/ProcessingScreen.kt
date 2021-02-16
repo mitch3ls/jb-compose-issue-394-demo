@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
-import at.cdfz.jsonsplitter.controller.JsonDocument
-import at.cdfz.jsonsplitter.controller.ProcessingState
+import at.cdfz.jsonsplitter.models.JsonDocument
+import at.cdfz.jsonsplitter.models.ProcessingState
 import at.cdfz.jsonsplitter.padding
 
 @Composable

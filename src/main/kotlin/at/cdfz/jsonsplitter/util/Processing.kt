@@ -1,9 +1,9 @@
 package at.cdfz.jsonsplitter.util
 
-import at.cdfz.jsonsplitter.controller.DataKeyState
-import at.cdfz.jsonsplitter.controller.IdGenerationState
-import at.cdfz.jsonsplitter.controller.JsonDocument
-import at.cdfz.jsonsplitter.controller.ProcessingState
+import at.cdfz.jsonsplitter.models.DataKeyState
+import at.cdfz.jsonsplitter.models.IdGenerationState
+import at.cdfz.jsonsplitter.models.JsonDocument
+import at.cdfz.jsonsplitter.models.ProcessingState
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi

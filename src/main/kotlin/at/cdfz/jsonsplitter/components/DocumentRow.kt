@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import at.cdfz.jsonsplitter.controller.DataKeyState
-import at.cdfz.jsonsplitter.controller.IdGenerationState
-import at.cdfz.jsonsplitter.controller.JsonDocument
+import at.cdfz.jsonsplitter.models.DataKeyState
+import at.cdfz.jsonsplitter.models.IdGenerationState
+import at.cdfz.jsonsplitter.models.JsonDocument
 import at.cdfz.jsonsplitter.padding
 import java.io.File
 

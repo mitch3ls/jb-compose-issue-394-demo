@@ -1,4 +1,4 @@
-package at.cdfz.jsonsplitter.controller
+package at.cdfz.jsonsplitter.models
 
 sealed class ProcessingState {
     object Init : ProcessingState()
