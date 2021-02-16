@@ -6,7 +6,8 @@ data class JsonDocument(
     val file: File,
     val dataKeyState: DataKeyState,
     val idGenerationState: IdGenerationState,
-    val processingState: ProcessingState
+    val processingState: ProcessingState,
+    val filterList: FilterList
 ) {
     override fun equals(other: Any?) = (other is JsonDocument)
             && file == other.file

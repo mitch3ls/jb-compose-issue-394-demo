@@ -6,6 +6,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -15,7 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DesktopDialogProperties
+import androidx.compose.ui.window.Dialog
+import at.cdfz.jsonsplitter.ZentDokTheme
+import at.cdfz.jsonsplitter.appIcon
 import at.cdfz.jsonsplitter.models.DataKeyState
 import at.cdfz.jsonsplitter.models.IdGenerationState
 import at.cdfz.jsonsplitter.models.JsonDocument
@@ -27,6 +33,30 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
 
     val hoveringOverPath = remember { mutableStateOf(false) }
     val showIdGenerationDropdown = remember { mutableStateOf(false) }
+    val showFilterDialog = remember { mutableStateOf(false) }
+
+    if (showFilterDialog.value && document.dataKeyState is DataKeyState.HasAvailableRecordFields) {
+        Dialog(
+            onDismissRequest = { showFilterDialog.value = false }, // somehow this doesn't work
+            properties = DesktopDialogProperties(size = IntSize(400, 350), title = "Info", icon = appIcon)
+        ) {
+            ZentDokTheme {
+                FilterScreen(
+                    filters = document.filterList,
+                    onListChanged = { newFilterList ->
+                        onUpdate { document ->
+                            document.copy(
+                                filterList = newFilterList
+                            )
+                        }
+                        showFilterDialog.value = false
+                    },
+                    onCanceled = { showFilterDialog.value = false },
+                    possibleFields = document.dataKeyState.fields.toTypedArray()
+                )
+            }
+        }
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -240,6 +270,14 @@ fun DocumentRow(document: JsonDocument, onUpdate: ((JsonDocument) -> JsonDocumen
 
                     Spacer(Modifier.preferredHeight(padding))
                 }
+            }
+        }
+
+        if (document.dataKeyState is DataKeyState.HasAvailableRecordFields) {
+            IconButton({
+                showFilterDialog.value = true
+            }) {
+                Icon(Icons.Filled.Search)
             }
         }
 

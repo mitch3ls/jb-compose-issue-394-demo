@@ -98,7 +98,7 @@ object Processing {
 
             val sequence = parseRecords(document)
 
-            val chunks = sequence.chunked(chunkSize)
+            val chunks = sequence.filter { document.filterList.check(it) }.chunked(chunkSize)
 
             var chunksWritten = 0
             for (chunk in chunks) {

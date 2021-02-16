@@ -134,7 +134,8 @@ fun main() {
         }
 
         fun addFile(file: File) {
-            val document = JsonDocument(file, DataKeyState.Init, IdGenerationState.Init, ProcessingState.Init)
+            val document =
+                JsonDocument(file, DataKeyState.Init, IdGenerationState.Init, ProcessingState.Init, FilterList())
             documents.add(document)
             startInitialProcessing(document)
         }
